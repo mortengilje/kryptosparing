@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krypto Sparekalkulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+      background-color: #1e1e2e; /* Dark background */
+      color: #cdd6f4; /* Light text */
+    }
+    label {
+      display: block;
+      text-align: left;
+      margin-bottom: 5px;
+      margin-left: 5px;
+    }
+    input, button, .slider {
+      padding: 12px;
+      margin: 10px 0;
+      width: 100%;
+      font-size: 16px;
+      border: 1px solid #44475a;
+      border-radius: 8px;
+      box-sizing: border-box;
+      background-color: #2c2c3c; /* Darker input background */
+      color: #cdd6f4;
+    }
+    input::placeholder {
+      color: #888888;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 15px; /* Thicker button */
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button.loading {
+      cursor: wait;
+    }
+    .slider {
+      background-color: #2c2c3c;
+    }
+    .slider::-webkit-slider-thumb {
+      background-color: #007BFF;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #2c2c3c;
+      border: 1px solid #44475a;
+      border-radius: 8px;
+    }
+    .result .big-number {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .result .explanation {
+      font-size: 14px;
+      color: #cdd6f4;
+      line-height: 1.6; /* Increased line spacing */
+    }
+    .slider-container {
+      text-align: left;
+    }
+    .message {
+      margin-top: 20px;
+      margin-bottom: 20px;
+      padding: 10px;
+      font-size: 14px;
+      color: #a6e3a1; /* Green text */
+      background: rgba(0, 255, 0, 0.1); /* Light green background */
+      border: 1px solid #44475a;
+      border-radius: 8px;
+    }
+    .firi-info {
+      margin-top: 20px;
+      padding: 15px;
+      text-align: center;
+      font-size: 16px;
+      color: #cdd6f4;
+      background-color: #2b303b; /* Slightly lighter background */
+      border: 2px solid #007BFF; /* Blue border for attention */
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow */
+      cursor: pointer;
+    }
+    .firi-info a {
+      color: #007BFF;
+      text-decoration: underline;
+    }
+    .firi-info:hover {
+      background-color: #353945; /* Slightly lighter hover effect */
+      border-color: #0056b3; /* Darker blue border on hover */
+    }
+    .disclaimer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #888888;
+      text-align: center;
+      padding: 10px;
+      border-top: 1px solid #44475a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Krypto Sparekalkulator</h1>
+
+  <label for="initial">Startbeløp:</label>
+  <input type="text" id="initial" placeholder="0 kr" value="0 kr" onfocus="clearDefault(this)" oninput="formatInput(this)">
+
+  <label for="monthly">Månedlig Sparing:</label>
+  <input type="text" id="monthly" placeholder="0 kr" value="0 kr" onfocus="clearDefault(this)" oninput="formatInput(this)">
+
+  <label for="rate">Forventet Årlig Avkastning:</label>
+  <div class="slider-container">
+    <input type="range" id="rate" min="1" max="200" value="7" class="slider" oninput="updateRateLabel()">
+    <span id="rateLabel">7%</span>
+  </div>
+
+  <div class="message">
+    * Gjennomsnittlig årlig økning i Bitcoin siste 10 år: ~120% *
+  </div>
+
+  <label for="years">Hvor mange år vil du spare?</label>
+  <div class="slider-container">
+    <input type="range" id="years" min="1" max="50" value="10" class="slider" oninput="updateYearsLabel()">
+    <span id="yearsLabel">10 år</span>
+  </div>
+
+  <button id="calculateButton" onclick="calculate()">Beregn din krypto portefølje</button>
+
+  <div id="result" class="result" style="display: none;">
+    <div class="big-number" id="resultValue"></div>
+    <p class="explanation" id="resultExplanation"></p>
+  </div>
+
+  <div class="firi-info" id="firiSection" style="display: none;">
+    <p>
+      Start din reise på <a href="https://firi.com/affiliate?referral=4323df4a" target="_blank">Firi i dag</a> 
+      og få <strong>55 kr i velkomstbonus!</strong>
+    </p>
+    <p>Firi er Norges største kryptobørs med over 240 000 brukere.</p>
+  </div>
+
+  <script>
+    function clearDefault(input) {
+      if (input.value === "0 kr") {
+        input.value = "";
+      }
+    }
+
+    function formatInput(input) {
+      let value = input.value.replace(/\s+/g, '').replace('kr', ''); // Remove spaces and "kr"
+      value = value.replace(/\D/g, ''); // Remove non-numeric characters
+      input.value = value ? value.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " kr" : "0 kr"; // Add "kr" and space formatting
+    }
+
+    function updateRateLabel() {
+      const rateValue = document.getElementById('rate').value;
+      document.getElementById('rateLabel').innerText = rateValue + "%";
+    }
+
+    function updateYearsLabel() {
+      const yearsValue = document.getElementById('years').value;
+      document.getElementById('yearsLabel').innerText = yearsValue + " år";
+    }
+
+    function calculate() {
+      const button = document.getElementById('calculateButton');
+      button.disabled = true;
+      button.classList.add('loading');
+      button.innerHTML = "Laster...";
+
+      setTimeout(() => {
+        const initial = Math.round(parseFloat(document.getElementById('initial').value.replace(/\s+/g, '').replace('kr', '')) || 0);
+        const monthly = Math.round(parseFloat(document.getElementById('monthly').value.replace(/\s+/g, '').replace('kr', '')) || 0);
+        const rate = parseFloat(document.getElementById('rate').value) || 0;
+        const years = parseInt(document.getElementById('years').value) || 0;
+
+        const annualRate = rate / 100;
+        const months = years * 12;
+
+        const futureValue =
+          Math.round(initial * Math.pow(1 + annualRate, years) +
+          (monthly * (Math.pow(1 + annualRate / 12, months) - 1)) / (annualRate / 12));
+
+        const resultDiv = document.getElementById('result');
+        const firiSection = document.getElementById('firiSection');
+        const resultValue = document.getElementById('resultValue');
+        const resultExplanation = document.getElementById('resultExplanation');
+
+        resultValue.textContent = `${futureValue.toLocaleString('no-NO')} kr`;
+        resultExplanation.textContent = `Tallet over viser hva din kryptoportefølje kan være verdt om du starter med et beløp på ${initial.toLocaleString('no-NO')} kr, sparer ${monthly.toLocaleString('no-NO')} kr i måneden, og oppnår en årlig avkastning på ${rate}% over ${years} år. Jo tidligere du starter, desto større kan gevinsten bli!`;
+
+        resultDiv.style.display = 'block';
+        firiSection.style.display = 'block';
+
+        button.disabled = false;
+        button.classList.remove('loading');
+        button.innerHTML = "Beregn din krypto portefølje";
+      }, 2000); // Simulate loading for 2 seconds
+    }
+  </script>
+
+  <div class="disclaimer">
+    <p>
+      <strong>Ansvarsfraskrivelse:</strong> Investering i kryptovaluta innebærer høy risiko og kan føre til tap av hele eller deler av investert kapital. Historisk avkastning er ingen garanti for fremtidig avkastning. Vurder nøye din økonomiske situasjon og konsulter en finansrådgiver om nødvendig før du investerer.
+    </p>
+  </div>
+</body>
+</html>
